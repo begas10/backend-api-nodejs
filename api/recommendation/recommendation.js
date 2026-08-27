@@ -1,16 +1,50 @@
-const { find } = require('lodash')
-const beautifyUnique = require('mongoose-beautiful-unique-validation')
-const restful = require('node-restful')
-const mongoose = restful.mongoose
+const { DataTypes } = require('sequelize')
+const sequelize = require('../../config/database')
 
-const recommendationSchema = new mongoose.Schema({
-   fullName: { type: String, required: true },
-   description: { type: String, required: false },
-   stars: { type: Number, required: false },
-   situation: { type: String, required: false },
-   status: { type: Boolean, required: true },
+const Register = sequelize.define('Register', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+
+    fullName: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+
+    mail: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            isEmail: {
+                msg: 'Informe um e-mail válido.'
+            }
+        }
+    },
+
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    address: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+
+    number: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+
+    complement: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    tableName: 'registers',
+    timestamps: true
 })
 
-recommendationSchema.plugin(beautifyUnique)
-
-module.exports = restful.model('Recommendation', recommendationSchema )
+module.exports = Register

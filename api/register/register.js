@@ -1,17 +1,50 @@
-const { find } = require('lodash')
-const beautifyUnique = require('mongoose-beautiful-unique-validation')
-const restful = require('node-restful')
-const mongoose = restful.mongoose
+const { DataTypes } = require('sequelize')
+const sequelize = require('../../config/database')
 
-const registerSchema = new mongoose.Schema({
-   fullName: { type: String, required: true },
-   mail: { type: String, required: true },
-   phone: { type: String, required: false },
-   address: { type: String, required: true },
-   number: { type: Number, required: false },
-   complement: { type: String, required: false }
+const Register = sequelize.define('Register', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+
+    fullName: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+
+    mail: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            isEmail: {
+                msg: 'Informe um e-mail válido.'
+            }
+        }
+    },
+
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+
+    address: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+
+    number: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+
+    complement: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    tableName: 'registers',
+    timestamps: true
 })
 
-registerSchema.plugin(beautifyUnique)
-
-module.exports = restful.model('Register', registerSchema )
+module.exports = Register

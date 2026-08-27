@@ -1,73 +1,165 @@
-const _ = require('lodash')
+const express = require('express')
 const Register = require('./register')
-const fullNameRegex = /^[A-ZÀ-Ÿ][A-zÀ-ÿ']+\s([A-zÀ-ÿ']\s?)*[A-ZÀ-Ÿ][A-zÀ-ÿ']+$/ 
-const mailRegex = /\S+@\S+\.\S+/;
 
-Register.methods(['get', 'post', 'put', 'delete'])
-Register.updateOptions({ new: true, runValidators: true })
+const router = express.Router()
 
-Register.after('post', sendErrorsOrNext).after('put', sendErrorsOrNext)
-Register.before('post', register).before('put', register)
+const fullNameRegex =
+    /^[A-ZÀ-Ÿ][A-zÀ-ÿ']+\s([A-zÀ-ÿ']\s?)*[A-ZÀ-Ÿ][A-zÀ-ÿ']+$/
 
-function sendErrorsOrNext(req, res, next) {
-  const bundle = res.locals.bundle
-  
-  if (bundle.errors) {
-    var errors = parseErrors(bundle.errors)
-    res.status(500).json({ errors })
-  } else {
-     next()    
-  }
-}
+const mailRegex = /\S+@\S+\.\S+/
 
-function parseErrors(nodeRestfulErrors) {
-  const errors = []
-  _.forIn(nodeRestfulErrors, error => errors.push(error.message))
-  return errors
-}
 
-const sendErrorsFromDB = (res, dbErrors) => {
-  const errors = []
-  _.forIn(dbErrors.errors, error => errors.push(error.message))
-  return res.status(400).json({ errors })
-}
+// GET /api/register
+router.get('/', async (req, res) => {
+    try {
+        const registers = await Register.findAll({
+            order: [['id', 'DESC']]
+        })
 
-function register(req, res, next) {
-  const fullName = req.body.fullName || ''
-  const mail = req.body.mail || ''
-  const phone = req.body.phone || ''
-  const address = req.body.address || ''
-  const number = req.body.number || ''
-  const complement = req.body.complement || ''
+        res.json(registers)
 
-  if(!fullName.match(fullNameRegex)){
-    return res.status(400).send({ alert: ["Informe o Nome e Sobrenome."]})
-  }
+    } catch (error) {
+        console.error(error)
 
-  if(mail == null || mail == ""){
-    return res.status(400).send({ alert: ["O campo E-mail é obrigatório."]})
-  }
-  
-  if(!mail.match(mailRegex)){
-    return res.status(400).send({ alert: ["O e-mail informado é inválido. Informe um e-mail no formato [nome@dominio.com ou nome@dominio.com.br]."]})
-  }
+        res.status(500).json({
+            errors: [error.message]
+        })
+    }
+})
 
-  const newBody = new Register({
-      fullName,
-      mail,
-      phone,
-      address,
-      number,
-      complement
-  })
 
-  newBody.save(err => {
-      if (err) {
-          return sendErrorsFromDB(res, err)
-      } else {
-          res.status(201).json(newBody)
-      }
-  })
-}
+// GET /api/register/:id
+router.get('/:id', async (req, res) => {
+    try {
+        const register = await Register.findByPk(req.params.id)
 
-module.exports = Register
+        if (!register) {
+            return res.status(404).json({
+                errors: ['Cadastro não encontrado.']
+            })
+        }
+
+        res.json(register)
+
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            errors: [error.message]
+        })
+    }
+})
+
+
+// POST /api/register
+router.post('/', async (req, res) => {
+    try {
+        const fullName = req.body.fullName || ''
+        const mail = req.body.mail || ''
+        const phone = req.body.phone || ''
+        const address = req.body.address || ''
+        const number = req.body.number || null
+        const complement = req.body.complement || ''
+
+        if (!fullName.match(fullNameRegex)) {
+            return res.status(400).json({
+                alert: ['Informe o Nome e Sobrenome.']
+            })
+        }
+
+        if (!mail) {
+            return res.status(400).json({
+                alert: ['O campo E-mail é obrigatório.']
+            })
+        }
+
+        if (!mail.match(mailRegex)) {
+            return res.status(400).json({
+                alert: [
+                    'O e-mail informado é inválido. Informe um e-mail no formato [nome@dominio.com ou nome@dominio.com.br].'
+                ]
+            })
+        }
+
+        if (!address) {
+            return res.status(400).json({
+                alert: ['O campo Endereço é obrigatório.']
+            })
+        }
+
+        const newRegister = await Register.create({
+            fullName,
+            mail,
+            phone,
+            address,
+            number,
+            complement
+        })
+
+        res.status(201).json(newRegister)
+
+    } catch (error) {
+        console.error(error)
+
+        res.status(400).json({
+            errors: error.errors
+                ? error.errors.map(err => err.message)
+                : [error.message]
+        })
+    }
+})
+
+
+// PUT /api/register/:id
+router.put('/:id', async (req, res) => {
+    try {
+        const register = await Register.findByPk(req.params.id)
+
+        if (!register) {
+            return res.status(404).json({
+                errors: ['Cadastro não encontrado.']
+            })
+        }
+
+        await register.update(req.body)
+
+        res.json(register)
+
+    } catch (error) {
+        console.error(error)
+
+        res.status(400).json({
+            errors: error.errors
+                ? error.errors.map(err => err.message)
+                : [error.message]
+        })
+    }
+})
+
+
+// DELETE /api/register/:id
+router.delete('/:id', async (req, res) => {
+    try {
+        const register = await Register.findByPk(req.params.id)
+
+        if (!register) {
+            return res.status(404).json({
+                errors: ['Cadastro não encontrado.']
+            })
+        }
+
+        await register.destroy()
+
+        res.status(204).send()
+
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            errors: [error.message]
+        })
+    }
+})
+
+
+module.exports = router
