@@ -1,18 +1,25 @@
-name: Automated API tests using Postman CLI E Github Actios
+name: Automated API tests using Postman CLI E Github Actions
 
-on: 
-    push
-   
+on:
+  push:
+
 jobs:
   automated-api-tests:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Postman CLI
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+
       - name: Login to Postman CLI
-        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+        run: |
+          postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+
       - name: Run API tests
         run: |
-          postman collection run "52536441-eb011e13-0f46-4ede-8a99-f0c75c5f049c" -e "52536441-ec61c252-ed02-46bf-9cea-21d1c3f540d0"
+          postman collection run "52536441-eb011e13-0f46-4ede-8a99-f0c75c5f049c" \
+            -e "52536441-ec61c252-ed02-46bf-9cea-21d1c3f540d0" \
+            --env-var "base_url=https://theme-simple-trio.ngrok-free.dev"
