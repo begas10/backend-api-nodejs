@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../../config/database')
 
-const Register = sequelize.define('Register', {
+const Recommendation = sequelize.define('Recommendation', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -13,38 +13,41 @@ const Register = sequelize.define('Register', {
         allowNull: false
     },
 
-    mail: {
+    description: {
+        type: DataTypes.STRING(500),
+        allowNull: true
+    },
+
+    situation: {
         type: DataTypes.STRING,
         allowNull: false,
+        defaultValue: 'Pendente'
+    },
+
+    stars: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
         validate: {
-            isEmail: {
-                msg: 'Informe um e-mail válido.'
+            min: {
+                args: [1],
+                msg: 'A classificação mínima é 1 estrela.'
+            },
+            max: {
+                args: [5],
+                msg: 'A classificação máxima é 5 estrelas.'
             }
         }
     },
 
-    phone: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-
-    address: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-
-    number: {
-        type: DataTypes.INTEGER,
-        allowNull: true
-    },
-
-    complement: {
-        type: DataTypes.STRING,
-        allowNull: true
+    status: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
     }
+
 }, {
-    tableName: 'registers',
+    tableName: 'recommendations',
     timestamps: true
 })
 
-module.exports = Register
+module.exports = Recommendation

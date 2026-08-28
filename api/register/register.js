@@ -41,7 +41,13 @@ const Register = sequelize.define('Register', {
     complement: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+
+    stars: {
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
+
 }, {
     tableName: 'registers',
     timestamps: true
